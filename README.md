@@ -44,19 +44,33 @@ Repo structure
 
 sprint-risk-agent/
 ├── README.md
+
 ├── src/
+
 │   ├── github_client.py      # tool functions: list_issues, get_issue_detail, get_issue_comments
+
 │   ├── agent.py               # the tool-calling loop + prompt
+
 │   ├── schema.py               # pydantic models for verdicts
+
 │   └── digest.py                # formats verdicts into a readable report
+
 ├── eval/
+
 │   ├── labeled_issues.json
+
 │   ├── baseline.py
+
 │   └── score.py
+
 ├── tests/
+
 │   └── test_github_client.py, test_digest.py, ...
+
 ├── .github/workflows/ci.yml
+
 └── requirements.txt
+
 
 Milestones
 Data layer — GitHub client + tool functions, tested against a real public repo.
