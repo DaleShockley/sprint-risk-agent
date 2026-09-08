@@ -1,0 +1,150 @@
+[
+  {
+    "issue": {
+      "number": 101,
+      "title": "Export button silently fails on large datasets",
+      "body": "Users report the CSV export just spins forever above ~10k rows.",
+      "state": "open",
+      "labels": [],
+      "assignee": "alice",
+      "milestone": "v2.3",
+      "created_at": "2026-07-10T12:00:00Z",
+      "updated_at": "2026-08-01T09:00:00Z",
+      "comments_count": 1
+    },
+    "comments": [
+      {"author": "alice", "body": "Taking a look this week.", "created_at": "2026-08-01T09:00:00Z"}
+    ],
+    "expected_risk": "stale",
+    "notes": "No update in 38 days despite the 'taking a look' comment."
+  },
+  {
+    "issue": {
+      "number": 102,
+      "title": "Webhook retries not honoring backoff config",
+      "body": "Retry storm hit a downstream service during the incident last week.",
+      "state": "open",
+      "labels": ["blocked"],
+      "assignee": "bob",
+      "milestone": "v2.3",
+      "created_at": "2026-08-20T12:00:00Z",
+      "updated_at": "2026-09-05T15:00:00Z",
+      "comments_count": 2
+    },
+    "comments": [
+      {"author": "bob", "body": "Need the platform team to expose the config flag first.", "created_at": "2026-09-03T10:00:00Z"},
+      {"author": "bob", "body": "Still waiting on platform, no ETA yet.", "created_at": "2026-09-05T15:00:00Z"}
+    ],
+    "expected_risk": "blocked",
+    "notes": "Genuinely blocked, actively confirmed in the comment thread."
+  },
+  {
+    "issue": {
+      "number": 103,
+      "title": "Dark mode toggle resets on page refresh",
+      "body": "Preference isn't persisted to localStorage correctly.",
+      "state": "open",
+      "labels": [],
+      "assignee": null,
+      "milestone": null,
+      "created_at": "2026-09-01T12:00:00Z",
+      "updated_at": "2026-09-05T08:00:00Z",
+      "comments_count": 0
+    },
+    "comments": [],
+    "expected_risk": "unowned",
+    "notes": "No assignee, nobody has picked it up."
+  },
+  {
+    "issue": {
+      "number": 104,
+      "title": "Payment retry logic double-charges on network timeout",
+      "body": "High severity, seen twice in production this month.",
+      "state": "open",
+      "labels": ["priority: high"],
+      "assignee": "carol",
+      "milestone": "v2.3",
+      "created_at": "2026-08-01T12:00:00Z",
+      "updated_at": "2026-08-17T11:00:00Z",
+      "comments_count": 1
+    },
+    "comments": [
+      {"author": "carol", "body": "Going to prioritize this after the current sprint.", "created_at": "2026-08-17T11:00:00Z"}
+    ],
+    "expected_risk": "at_risk_priority",
+    "notes": "High priority label, 22 days idle -- the kind of thing that quietly slips."
+  },
+  {
+    "issue": {
+      "number": 105,
+      "title": "Add keyboard shortcut for search",
+      "body": "Nice-to-have, low effort.",
+      "state": "open",
+      "labels": [],
+      "assignee": "dave",
+      "milestone": "v2.4",
+      "created_at": "2026-09-06T12:00:00Z",
+      "updated_at": "2026-09-07T16:00:00Z",
+      "comments_count": 0
+    },
+    "comments": [],
+    "expected_risk": "none",
+    "notes": "Owned, recently touched, no red flags. Healthy."
+  },
+  {
+    "issue": {
+      "number": 106,
+      "title": "Nightly sync job fails intermittently",
+      "body": "Cron job errors out roughly 1 in 10 runs.",
+      "state": "open",
+      "labels": ["blocked"],
+      "assignee": "erin",
+      "milestone": "v2.3",
+      "created_at": "2026-08-25T12:00:00Z",
+      "updated_at": "2026-09-06T14:00:00Z",
+      "comments_count": 2
+    },
+    "comments": [
+      {"author": "erin", "body": "Was blocked on infra access, that's sorted now.", "created_at": "2026-09-05T09:00:00Z"},
+      {"author": "erin", "body": "Fix is up in PR #211, just needs review. Label is stale, can remove.", "created_at": "2026-09-06T14:00:00Z"}
+    ],
+    "expected_risk": "none",
+    "notes": "Trap case: label still says blocked but the thread shows it's resolved. Tests whether the classifier reads comments instead of trusting the label."
+  },
+  {
+    "issue": {
+      "number": 107,
+      "title": "Migrate legacy auth tokens to new format",
+      "body": "One-time migration script needed before the old endpoint sunsets.",
+      "state": "open",
+      "labels": [],
+      "assignee": "frank",
+      "milestone": "v2.3",
+      "created_at": "2026-08-15T12:00:00Z",
+      "updated_at": "2026-09-03T10:00:00Z",
+      "comments_count": 1
+    },
+    "comments": [
+      {"author": "frank", "body": "Heads up, I'm out for the next 3 weeks. Someone should pick this up in the meantime.", "created_at": "2026-09-03T10:00:00Z"}
+    ],
+    "expected_risk": "unowned",
+    "notes": "Trap case: assignee field is still set, but the comment says they're effectively unavailable. Only visible by reading comments."
+  },
+  {
+    "issue": {
+      "number": 110,
+      "title": "Rate limiter config drifted from prod values in staging",
+      "body": "Staging is using defaults, not the tuned prod config.",
+      "state": "open",
+      "labels": ["blocked"],
+      "assignee": "grace",
+      "milestone": null,
+      "created_at": "2026-08-10T12:00:00Z",
+      "updated_at": "2026-08-24T12:00:00Z",
+      "comments_count": 0
+    },
+    "comments": [],
+    "expected_risk": "blocked",
+    "notes": "Blocked and idle 15 days with zero comments -- worth flagging as blocked, not just stale."
+  }
+]
