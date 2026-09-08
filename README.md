@@ -41,6 +41,7 @@ Score the agent's verdicts against your labels: accuracy per category, plus a co
 Build one naive baseline (e.g., a rule-based script: flag anything untouched for 14+ days as stale, anything unassigned as unowned) and score it the same way.
 Report both numbers side by side in the README. The agent doesn't need to crush the baseline — an honest table showing where it's better and where it isn't is more credible than a claim that it's perfect.
 Repo structure
+
 sprint-risk-agent/
 ├── README.md
 ├── src/
@@ -56,6 +57,7 @@ sprint-risk-agent/
 │   └── test_github_client.py, test_digest.py, ...
 ├── .github/workflows/ci.yml
 └── requirements.txt
+
 Milestones
 Data layer — GitHub client + tool functions, tested against a real public repo.
 Agent loop — tool-calling wired up, produces structured verdicts for a handful of issues.
