@@ -1,95 +1,119 @@
-Sprint Risk Agent — Project Spec
+# Sprint Risk Agent
 
-The problem
-Every TPM spends hours each week scanning a backlog for issues that are quietly going sideways: no update in two weeks, no assignee, marked "blocked" with no comment explaining why, high priority but zero recent activity. This project builds an agent that does that scan and writes the status digest a human would actually send.
-Why this project, specifically
-Most "AI portfolio projects" are a chatbot wrapped around an API call. This one isn't, and that's the point. It has to show three things a reviewer will actually check:
+An agent that scans a GitHub repo's open issues and flags the ones quietly going sideways — stale, blocked, unowned, or high-priority-but-forgotten — and writes the status digest a human would actually send.
 
-Real tool use. The agent calls functions to fetch data and decide what to look at next, it isn't just fed a wall of text in one prompt.
-Structured, checkable output. Risk flags come back as typed data, not prose you have to trust.
-Evaluation. There's a small labeled test set and a script that scores the agent against it, plus a comparison against a dumb baseline. This is the part almost nobody includes, and it's the part that signals you understand AI work has to be measured, not just demoed.
-Architecture
-Agent loop (Claude via the Anthropic SDK, tool-calling mode):
+Built to demonstrate real agentic tool-use (not a chatbot wrapper), structured output, and an evaluation harness that measures the agent against both a hand-labeled test set and a naive rule-based baseline.
 
-list_issues(repo, state="open") — pulls open issues via the GitHub REST API.
-get_issue_detail(issue_number) — fetches labels, assignee, milestone, last-updated timestamp.
-get_issue_comments(issue_number) — pulls comment thread, used to check for unresolved blockers.
-Agent reasons over each issue and emits a structured verdict:
+## The problem
 
-{
-  "issue": 482,
-  "risk": "blocked",
-  "confidence": "high",
-  "reason": "Labeled blocked 9 days ago, no comment since, no linked PR.",
-  "recommended_action": "Ping assignee or reassign."
-}
+Every TPM or eng lead spends hours a week scanning a backlog for issues that are silently rotting: no update in two weeks, no assignee, marked "blocked" with no comment explaining why. This automates that first pass.
 
-A formatting step turns the list of verdicts into a digest (markdown or Slack-style text) grouped by risk type.
+## Sample output
 
-Risk categories to start with: stale (no activity in N days), blocked (label or comment language, no resolution), unowned (no assignee), at_risk_priority (high priority, low recent activity).
-Tech stack
-Python 3.11+
-Anthropic SDK for the agent loop and tool calling
-requests (or PyGithub) for the GitHub REST API
-pydantic for the structured verdict schema
-pytest for unit tests on the tools and the formatting layer
-A flat JSON file as the eval set (20-30 hand-labeled issues with the "correct" risk verdict)
-GitHub Actions for CI (lint + tests on every push)
-Eval harness (the part that matters most)
-Build a labeled set: pull ~25 real closed/old issues from a public repo, hand-label what risk category each should have gotten.
-Score the agent's verdicts against your labels: accuracy per category, plus a confusion matrix if you want to go further.
-Build one naive baseline (e.g., a rule-based script: flag anything untouched for 14+ days as stale, anything unassigned as unowned) and score it the same way.
-Report both numbers side by side in the README. The agent doesn't need to crush the baseline — an honest table showing where it's better and where it isn't is more credible than a claim that it's perfect.
-Repo structure
+```
+# Sprint Risk Digest — octocat/example-repo
+_Generated 2026-09-08 20:32 UTC_
 
+**6 issue(s) flagged.**
+
+## Blocked (2)
+
+- **#102 — Webhook retries not honoring backoff config** _(confidence: high)_
+  Labeled blocked, still waiting on platform team per latest comment.
+  → Ping platform team for ETA or escalate.
+- **#110 — Rate limiter config drifted from prod values in staging** _(confidence: medium)_
+  Labeled blocked, idle 15 days with zero comments.
+  → Check if the blocker is still valid.
+
+## High priority, going quiet (1)
+
+- **#104 — Payment retry logic double-charges on network timeout** _(confidence: high)_
+  Priority: high label, 22 days idle despite a 'prioritizing soon' comment.
+  → Confirm this is actually on the current sprint.
+
+## Stale (1)
+
+- **#101 — Export button silently fails on large datasets** _(confidence: medium)_
+  No update in 38 days despite an early 'taking a look' comment.
+  → Ask for a status update.
+
+## Unowned (2)
+
+- **#103 — Dark mode toggle resets on page refresh** _(confidence: high)_
+  No assignee, 4 days since last activity.
+  → Assign an owner.
+- **#107 — Migrate legacy auth tokens to new format** _(confidence: medium)_
+  Assignee is out for 3 weeks per their own comment; effectively unowned.
+  → Reassign while frank is out.
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[GitHub Issues API] -->|list_issues, get_issue_detail, get_issue_comments| B[Tool functions<br/>src/github_client.py]
+    B --> C[Agent loop<br/>src/agent.py<br/>Claude + tool calling]
+    C -->|structured verdicts| D[schema.py<br/>pydantic RiskVerdict]
+    D --> E[Digest formatter<br/>src/digest.py]
+    E --> F[Markdown report]
+```
+
+The agent doesn't get fed a wall of text — it calls tools to pull real data (labels, assignee, timestamps, comment threads) and decides what to look at next. Output is validated against a typed schema, not trusted as raw text.
+
+## Why the eval harness matters
+
+Most "AI agent" side projects skip measurement entirely. This one scores two classifiers against the same 8 hand-labeled issues in `eval/labeled_issues.json`:
+
+| Approach | Accuracy | Notes |
+|---|---|---|
+| Rule-based baseline (`eval/baseline.py`) | 6/8 (75%) | Fast, free, no LLM — but only looks at labels/assignee/dates |
+| Claude agent (`src/agent.py`) | _run it and fill this in_ | Reads comment threads, should catch what the baseline misses |
+
+The eval set includes two deliberate "trap" cases: an issue still labeled `blocked` whose comments show it was actually resolved, and an issue with an assignee who commented they're out for three weeks. The baseline gets both wrong because it never reads comments — that gap is exactly what the tool-calling agent is meant to close.
+
+Run the baseline report yourself:
+```bash
+python -m eval.score
+```
+
+## Project structure
+
+```
 sprint-risk-agent/
-├── README.md
-
 ├── src/
-
-│   ├── github_client.py      # tool functions: list_issues, get_issue_detail, get_issue_comments
-
-│   ├── agent.py               # the tool-calling loop + prompt
-
-│   ├── schema.py               # pydantic models for verdicts
-
-│   └── digest.py                # formats verdicts into a readable report
-
+│   ├── github_client.py   # tool functions: list_issues, get_issue_detail, get_issue_comments
+│   ├── agent.py            # Claude tool-calling loop
+│   ├── schema.py            # pydantic RiskVerdict model
+│   └── digest.py             # formats verdicts into a markdown report
 ├── eval/
+│   ├── labeled_issues.json   # 8 hand-labeled sample issues
+│   ├── baseline.py            # naive rule-based classifier
+│   └── score.py                # scores predictions against the labeled set
+├── tests/                        # pytest, all mocked — no API keys needed to run
+└── .github/workflows/ci.yml         # runs tests + baseline report on every push
+```
 
-│   ├── labeled_issues.json
+## Running it
 
-│   ├── baseline.py
+```bash
+git clone https://github.com/DaleShockley/sprint-risk-agent.git
+cd sprint-risk-agent
+pip install -r requirements.txt
 
-│   └── score.py
+# unit tests (no keys needed)
+pytest tests/ -v
 
-├── tests/
+# baseline eval report (no keys needed)
+python -m eval.score
 
-│   └── test_github_client.py, test_digest.py, ...
+# run the live agent against a real repo (needs ANTHROPIC_API_KEY)
+export ANTHROPIC_API_KEY=sk-...
+python -m src.agent octocat/hello-world
+```
 
-├── .github/workflows/ci.yml
+## What's next
 
-└── requirements.txt
-
-
-Milestones
-Data layer — GitHub client + tool functions, tested against a real public repo.
-Agent loop — tool-calling wired up, produces structured verdicts for a handful of issues.
-Digest formatting — verdicts become a readable report (this is the "demo-able" milestone).
-Eval harness — labeled set, scoring script, baseline comparison.
-Polish — README with architecture diagram, sample digest output, eval results table, a short GIF or screenshot, CI badge.
-README outline (for the finished repo)
-One-paragraph problem statement (the pain, not the tech)
-Sample output (a real digest, so a reviewer sees the payoff in 10 seconds)
-Architecture diagram (agent loop + tools)
-Eval results table (agent vs. baseline)
-How to run it locally
-What you'd build next (scope this honestly, it reads as self-aware rather than incomplete)
-Stretch goals (only after the above works)
-Slack webhook output instead of/alongside markdown
-Scheduled runs (cron or GitHub Action) so it posts a digest automatically
-Multi-repo support
-A second baseline: plain zero-shot prompting (no tools, just a big text dump) scored against the tool-using agent, to make the "why tool use matters" case explicit
-
-# sprint-risk-agent
-Sprint Risk Agent
+- Wire the live agent's output into `eval/score.py` for a real agent-vs-baseline comparison
+- Slack webhook output as an alternative to the markdown digest
+- Scheduled runs via GitHub Actions so it posts a digest automatically
+- A zero-shot (no tools) baseline, to make the case for tool-calling explicit alongside the rule-based one
